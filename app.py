@@ -1,76 +1,42 @@
-from flask import Flask, request, jsonify, send_from_directory
-import os
-from werkzeug.utils import secure_filename
+import streamlit as st
 import tensorflow as tf
-import logging
 import numpy as np
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
+import os
+from PIL import Image
 
-# Suppress TensorFlow logging
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-logging.getLogger('tensorflow').setLevel(logging.ERROR)
-
-app = Flask(__name__)
-
-# Load the AI model
-MODEL_PATH = r"D:\OCT\retinal-oct-images-classification\code\old\testimg\baseline_model.keras"
+# โหลดโมเดล
+MODEL_PATH = "baseline_model.keras"  # ต้องอัปโหลดไฟล์นี้ขึ้นไปใน repo ด้วย
 model = tf.keras.models.load_model(MODEL_PATH)
 
-# Directory to save uploaded images
-UPLOAD_FOLDER = 'uploaded_images'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-# Class names for mapping predictions
+# Class labels
 CLASS_NAMES = ["CNV", "DME", "DRUSEN", "NORMAL"]
 
-# Serve uploaded images
-@app.route('/uploaded_images/<filename>')
-def serve_uploaded_image(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+# UI
+st.set_page_config(page_title="OCT Classifier")
+st.title("Retinal OCT Image Classification")
 
-@app.route('/')
-def home():
-    return send_from_directory(r"D:\OCT\retinal-oct-images-classification\wad\Frontend", 'index.html')
+# อัปโหลดภาพ
+uploaded_file = st.file_uploader("Upload an OCT image", type=["jpg", "jpeg", "png"])
 
-@app.route('/reference_page')
-def reference_page():
-    return send_from_directory(r"D:\OCT\retinal-oct-images-classification\wad\Frontend", 'reference_page.html')
+if uploaded_file is not None:
+    # แสดงภาพ
+    image = Image.open(uploaded_file)
+    st.image(image, caption="Uploaded Image", use_column_width=True)
 
-@app.route('/upload', methods=['POST'])
-def upload():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
+    # ประมวลผลภาพ
+    img = image.resize((224, 224))
+    img_array = img_to_array(img) / 255.0
+    img_array = np.expand_dims(img_array, axis=0)
 
-    file = request.files['file']
+    # พยากรณ์
+    predictions = model.predict(img_array)[0]
+    confidences = {CLASS_NAMES[i]: round(float(conf) * 100, 2) for i, conf in enumerate(predictions)}
 
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
+    # แสดงผลลัพธ์
+    st.subheader("Prediction:")
+    for cls, conf in confidences.items():
+        st.write(f"**{cls}**: {conf}%")
 
-    filename = secure_filename(file.filename)
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    file.save(filepath)
-
-    # Predict using the loaded model
-    try:
-        image = load_img(filepath, target_size=(224, 224))
-        image = img_to_array(image) / 255.0
-        image = np.expand_dims(image, axis=0)
-
-        predictions = model.predict(image)
-
-        # Map predictions to class names
-        class_confidences = {CLASS_NAMES[i]: round(float(conf) * 100, 2) for i, conf in enumerate(predictions[0])}
-
-    except Exception as e:
-        print(f"Error during upload processing: {e}")
-        return jsonify({'error': str(e)}), 500
-
-    return jsonify({
-        'message': 'File uploaded successfully',
-        'class_confidences': class_confidences,
-        'filepath': f'/uploaded_images/{filename}'
-    })
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # แสดงแถบความมั่นใจ
+    st.bar_chart(predictions)
