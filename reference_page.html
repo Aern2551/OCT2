@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>References</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            text-align: center;
+            padding: 50px;
+        }
+        h1 {
+            font-family: 'Arial', sans-serif;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .card {
+            border-radius: 15px;
+            padding: 20px;
+            margin: auto;
+            max-width: 600px;
+            background-color: white;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: #2980b9;
+            border: none;
+            margin-top: 20px;
+        }
+        .btn-primary:hover {
+            background-color: #1c5980;
+        }
+        .btn-secondary {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }
+        footer {
+            margin-top: 50px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <!-- ปุ่มสำหรับกลับไปหน้าแรก -->
+    <div class="position-absolute top-0 start-0 m-3">
+        <button class="btn btn-secondary d-flex align-items-center" onclick="window.location.href='/'">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-2" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 1-.5.5H3.707l3.147 3.146a.5.5 0 0 1-.708.708l-4-4a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L3.707 7.5H14.5A.5.5 0 0 1 15 8z"/>
+            </svg>
+            Back to Home
+        </button>
+    </div>
+    
+    <div class="container">
+        <h1>ข้อมูลโครงงาน</h1>
+        <div class="card">
+            <h3>ชื่อโครงงาน</h3>
+            <p>เว็บแอปพลิเคชันเพื่อตรวจจับความผิดปกติของจอประสาทตาผ่านรูปถ่ายขั้วประสาทตา โดยอาศัยโครงข่ายประสาทเทียม</p>
+            <p>Retinal Abnormalities Detection Web Application Using Neural Networks</p>
+        </div>
+        <div class="card mt-3">
+            <h3>สมาชิกโครงงาน</h3>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">นางสาวขวัญภัสสรา ใชยทิพย์ ม.5/7 เลขที่ 24</li>
+                <li class="list-group-item">นางสาวพัชราภรณ์ ขวัญพรมสี ม.5/7 เลขที่ 24</li>
+            </ul>
+        </div>
+        <div class="card mt-3">
+            <h3>คุณครูที่ปรึกษา</h3>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">คุณครูธนาดล คงทอง</li>
+                <li class="list-group-item">คุณครูอภิญญา บุญคุ้ม</li>
+            </ul>
+        </div>
+        <div class="card mt-3">
+            <h3>อาจารย์ที่ปรึกษาร่วม</h3>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">อาจารย์นายแพทย์ชัชวาล อร่ามรัตน์ (อาจารย์ที่ปรึกษาร่วม)</li>
+            </ul>
+        </div>
+        <div class="card mt-3">
+            <p>เว็บไซต์นี้เป็นส่วนหนึ่งของรายวิชาโครงงาน STEM 2 (ว30284)</p>
+            <p><strong>โรงเรียนมอ.วิทยานุสรณ์</strong></p>
+        </div>
+    </div>
+
+    <footer>
+        <p>ติดต่อเรา: <a href="mailto:tanadol@psuwit.ac.th">tanadol@psuwit.ac.th</a></p>
+        <p>&copy; 2025 โรงเรียนมอ.วิทยานุสรณ์</p>
+    </footer>
+</body>
+</html>
+

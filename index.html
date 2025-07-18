@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCT Image Classification</title>
+    <!-- Include Bootstrap for styling -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        h1 {
+            font-family: 'Arial', sans-serif;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .card {
+            border-radius: 20px;
+        }
+        .btn-primary {
+            background-color: #2980b9;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #1c5980;
+        }
+        .btn-secondary {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }
+        .diagnostic-message {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: black;
+            text-align: center;
+            margin-top: 20px;
+        }
+        img {
+            max-height: 400px;
+            margin-top: 20px;
+        }
+        .highlight {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #d9534f;
+        }
+        .secondary {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #f0ad4e;
+        }
+        .table-danger {
+            background-color: #f8d7da !important;
+        }
+        .table-warning {
+            background-color: #fff3cd !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Button for navigating to reference_page.html -->
+    <div class="position-absolute top-0 start-0 m-3">
+        <button class="btn btn-secondary" onclick="window.location.href='/reference_page'">References</button>
+    </div>
+
+    <div class="container py-5">
+        <h1 class="text-center mb-4">OCT Image Classification</h1>
+        
+        <div class="card shadow p-4">
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="file" class="form-label">Upload an Image:</label>
+                    <input type="file" id="file" name="file" class="form-control" accept="image/*" required>
+                </div>
+                <div class="d-grid">
+                    <button type="button" onclick="uploadImage()" class="btn btn-primary">Upload</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="status" class="text-info text-center mt-4" style="font-weight: bold;"></div>
+
+        <div id="result" class="mt-4">
+            <!-- Results will be displayed here -->
+        </div>
+    </div>
+
+    <!-- Include Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        async function uploadImage() {
+            const statusDiv = document.getElementById('status');
+            const resultDiv = document.getElementById('result');
+
+            statusDiv.innerHTML = "Receiving image... Processing image.";
+            resultDiv.innerHTML = "";
+
+            const formData = new FormData(document.getElementById('uploadForm'));
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    statusDiv.innerHTML = "Processing complete.";
+
+                    const imagePath = data.filepath;
+                    let predictions = data.class_confidences;
+
+                    // Sort predictions by confidence
+                    const sortedPredictions = Object.entries(predictions).sort((a, b) => b[1] - a[1]);
+                    const topPrediction = sortedPredictions[0];
+                    const secondPrediction = sortedPredictions.length > 1 ? sortedPredictions[1] : null;
+
+                    // Determine diagnostic message
+                    let diagnosticMessage = "";
+                    if (topPrediction[0] === "CNV" && topPrediction[1] >= 80) {
+                        diagnosticMessage = "คุณมีโอกาสเป็นโรคจอประสาทตาเสื่อมตามอายุ โดยมีภาวะ Choroidal neovascularization (CNV)";
+                    } else if (topPrediction[0] === "DRUSEN" && topPrediction[1] >= 25) {
+                        diagnosticMessage = "คุณมีโอกาสเป็นโรคจอประสาทตาเสื่อมตามอายุ โดยมีภาวะ DRUSEN";
+                    } else if (topPrediction[0] === "DME" && topPrediction[1] >= 80) {
+                        diagnosticMessage = "คุณมีโอกาสเป็นภาวะเบาหวานขึ้นจอประสาทตา";
+                    } else if (topPrediction[0] === "NORMAL" && topPrediction[1] >= 80) {
+                        diagnosticMessage = "คุณมีดวงตาที่ปกติดี";
+                    } else {
+                        diagnosticMessage = "พบความผิดปกติทางดวงตา รอพบแพทย์";
+                    }
+
+                    // Create diagnostic message and table
+                    let classResults = `
+                        <h3 class="mt-4">Class Confidences:</h3>
+                        <table class="table table-bordered mt-3">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Diagnosis</th>
+                                    <th>Confidence (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                    
+                    const highestClass = sortedPredictions[0][0]; // Top class
+                    const secondClass = sortedPredictions[1][0]; // Second highest class
+                    for (const [className, confidence] of sortedPredictions) {
+                        const highlightRow = className === highestClass ? 'table-danger' : className === secondClass ? 'table-warning' : '';
+                        classResults += `
+                            <tr class="${highlightRow}">
+                                <td><strong>${className}</strong></td>
+                                <td>${(confidence).toFixed(2)}%</td>
+                            </tr>`;
+                    }
+                    classResults += "</tbody></table>";
+
+                    resultDiv.innerHTML = `
+                        <div class="card mt-4 shadow-sm">
+                            <div class="card-body">
+                                <p><strong>Filepath:</strong> ${imagePath}</p>
+                                <div class="text-center">
+                                    <img src="${imagePath}" alt="Uploaded Image" class="img-fluid rounded">
+                                    <p class="diagnostic-message">${diagnosticMessage}</p>
+                                </div>
+                                ${classResults}
+                            </div>
+                        </div>`;
+                } else {
+                    const error = await response.json();
+                    statusDiv.innerHTML = "Error occurred during processing.";
+                    resultDiv.innerHTML = `<p class="text-danger"><strong>Error:</strong> ${error.error}</p>`;
+                }
+            } catch (err) {
+                statusDiv.innerHTML = "Error occurred during processing.";
+                resultDiv.innerHTML = `<p class="text-danger"><strong>Error:</strong> ${err.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
